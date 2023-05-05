@@ -17,29 +17,28 @@
  */
 
 using System;
-using Newtonsoft.Json;
-using RestSharp.Deserializers;
+using System.Text.Json.Serialization;
 
 namespace eBay.ApiClient.Auth.OAuth2.Model
 {
     public class OAuthApiResponse
     {
-        [JsonProperty(PropertyName = "access_token")]
+        [JsonPropertyName("access_token")]
         public String AccessToken { get; set; }
 
-        [JsonProperty(PropertyName = "expires_in")]
+        [JsonPropertyName("expires_in")]
         public int ExpiresIn { get; set; }
 
-        [JsonProperty(PropertyName = "refresh_token")]
+        [JsonPropertyName("refresh_token")]
         public String RefreshToken { get; set; }
 
-        [JsonProperty(PropertyName = "refresh_token_expires_in")]
+        [JsonPropertyName("refresh_token_expires_in")]
         public int RefreshTokenExpiresIn { get; set; }
 
-        [JsonProperty(PropertyName = "token_type")]
+        [JsonPropertyName("token_type")]
         public String TokenType { get; set; }
 
-        [JsonProperty(PropertyName = "errorMessage")]
+        [JsonPropertyName("errorMessage")]
         public String ErrorMessage { get; set; }
     }
 }

@@ -16,17 +16,16 @@
  *  *
  */
 
-using System;
-using Xunit;
-using System.Collections.Generic;
 using eBay.ApiClient.Auth.OAuth2.Model;
-using System.IO;
 using OpenQA.Selenium;
-using System.Threading;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Firefox;
+using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.IO;
+using System.Threading;
 using System.Web;
+using Xunit;
 using YamlDotNet.RepresentationModel;
 
 namespace eBay.ApiClient.Auth.OAuth2
@@ -83,17 +82,18 @@ namespace eBay.ApiClient.Auth.OAuth2
         [Fact]
         public void GetApplicationToken_NullEnvironment_Failure()
         {
-            Assert.Throws<ArgumentException>(() => oAuth2Api.GetApplicationToken(null, scopes));
+            Assert.Throws<ArgumentException>(() => oAuth2Api.GetApplicationTokenAsync(null, scopes).Result);
         }
 
         [Fact]
         public void GetApplicationToken_NullScopes_Failure()
         {
-            Assert.Throws<ArgumentException>(() => oAuth2Api.GetApplicationToken(OAuthEnvironment.PRODUCTION, null));
+            Assert.Throws<ArgumentException>(() => oAuth2Api.GetApplicationTokenAsync(OAuthEnvironment.PRODUCTION, null).Result);
         }
 
         [Fact]
-        public void GenerateUserAuthorizationUrl_Success() {
+        public void GenerateUserAuthorizationUrl_Success()
+        {
             String yamlFile = @"../../../ebay-config-sample.yaml";
             StreamReader streamReader = new StreamReader(yamlFile);
             CredentialUtil.Load(streamReader);
@@ -122,7 +122,7 @@ namespace eBay.ApiClient.Auth.OAuth2
         {
             OAuthEnvironment environment = OAuthEnvironment.PRODUCTION;
             String code = "v^1.1**********************jYw";
-            OAuthResponse oAuthResponse = oAuth2Api.ExchangeCodeForAccessToken(environment, code);
+            OAuthResponse oAuthResponse = oAuth2Api.ExchangeCodeForAccessTokenAsync(environment, code).Result;
             Assert.NotNull(oAuthResponse);
             PrintOAuthResponse(environment, "ExchangeCodeForAccessToken", oAuthResponse);
         }
@@ -131,13 +131,13 @@ namespace eBay.ApiClient.Auth.OAuth2
         public void ExchangeCodeForAccessToken_NullEnvironment_Failure()
         {
             String code = "v^1.1*********************MjYw";
-            Assert.Throws<ArgumentException>(() => oAuth2Api.ExchangeCodeForAccessToken(null, code));
+            Assert.Throws<ArgumentException>(() => oAuth2Api.ExchangeCodeForAccessTokenAsync(null, code).Result);
         }
 
         [Fact]
         public void ExchangeCodeForAccessToken_NullCode_Failure()
         {
-            Assert.Throws<ArgumentException>(() => oAuth2Api.ExchangeCodeForAccessToken(OAuthEnvironment.PRODUCTION, null));
+            Assert.Throws<ArgumentException>(() => oAuth2Api.ExchangeCodeForAccessTokenAsync(OAuthEnvironment.PRODUCTION, null).Result);
         }
 
         [Fact]
@@ -145,7 +145,7 @@ namespace eBay.ApiClient.Auth.OAuth2
         {
             OAuthEnvironment environment = OAuthEnvironment.PRODUCTION;
             String refreshToken = "v^1.1*****************I2MA==";
-            OAuthResponse oAuthResponse = oAuth2Api.GetAccessToken(environment, refreshToken, userScopes);
+            OAuthResponse oAuthResponse = oAuth2Api.GetAccessTokenAsync(environment, refreshToken, userScopes).Result;
             Assert.NotNull(oAuthResponse);
             PrintOAuthResponse(environment, "GetAccessToken", oAuthResponse);
         }
@@ -165,18 +165,21 @@ namespace eBay.ApiClient.Auth.OAuth2
         }
 
 
-        private void GetApplicationToken_Success(OAuthEnvironment environment) {
-            OAuthResponse oAuthResponse = oAuth2Api.GetApplicationToken(environment, scopes);
+        private void GetApplicationToken_Success(OAuthEnvironment environment)
+        {
+            OAuthResponse oAuthResponse = oAuth2Api.GetApplicationTokenAsync(environment, scopes).Result;
             Assert.NotNull(oAuthResponse);
             PrintOAuthResponse(environment, "GetApplicationToken", oAuthResponse);
         }
 
-        private void LoadCredentials() {
+        private void LoadCredentials()
+        {
             String path = @"../../../ebay-config-sample.yaml";
             CredentialUtil.Load(path);
         }
 
-        private void PrintOAuthResponse(OAuthEnvironment environment, String methodName, OAuthResponse oAuthResponse) {
+        private void PrintOAuthResponse(OAuthEnvironment environment, String methodName, OAuthResponse oAuthResponse)
+        {
             Console.WriteLine("======================" + methodName + "======================");
             Console.WriteLine("Environment=> " + environment.ConfigIdentifier() + ", ErroMessage=> " + oAuthResponse.ErrorMessage);
             if (oAuthResponse.AccessToken != null)
@@ -203,12 +206,12 @@ namespace eBay.ApiClient.Auth.OAuth2
             Console.WriteLine("AuthorizationUrl => " + authorizationUrl);
             String authorizationCode = GetAuthorizationCode(authorizationUrl, userCredential);
             Console.WriteLine("AuthorizationCode => " + authorizationCode);
-            OAuthResponse oAuthResponse = oAuth2Api.ExchangeCodeForAccessToken(environment, authorizationCode);
+            OAuthResponse oAuthResponse = oAuth2Api.ExchangeCodeForAccessTokenAsync(environment, authorizationCode).Result;
             Assert.NotNull(oAuthResponse);
             Assert.NotNull(oAuthResponse.RefreshToken);
             String refreshToken = oAuthResponse.RefreshToken.Token;
             Console.WriteLine("RefreshToken=> " + refreshToken);
-            oAuthResponse = oAuth2Api.GetAccessToken(environment, refreshToken, userScopes);
+            oAuthResponse = oAuth2Api.GetAccessTokenAsync(environment, refreshToken, userScopes).Result;
             Assert.NotNull(oAuthResponse);
             Assert.NotNull(oAuthResponse.AccessToken);
             Console.WriteLine("AccessToken=> " + oAuthResponse.AccessToken.Token);
@@ -232,8 +235,9 @@ namespace eBay.ApiClient.Auth.OAuth2
                     {
                         continue;
                     }
-                    if (node is YamlMappingNode) {
-                    foreach (var keyValuePair in ((YamlMappingNode)node).Children)
+                    if (node is YamlMappingNode)
+                    {
+                        foreach (var keyValuePair in ((YamlMappingNode)node).Children)
                         {
                             if ("username".Equals(keyValuePair.Key.ToString()))
                             {
@@ -250,7 +254,8 @@ namespace eBay.ApiClient.Auth.OAuth2
             return userCredential;
         }
 
-        private String GetAuthorizationCode(String authorizationUrl, UserCredential userCredential) {
+        private String GetAuthorizationCode(String authorizationUrl, UserCredential userCredential)
+        {
 
             IWebDriver driver = new ChromeDriver("./");
 
@@ -269,7 +274,7 @@ namespace eBay.ApiClient.Auth.OAuth2
             String successUrl = driver.Url;
 
             //Handle consent
-            if(successUrl.Contains("/consents"))
+            if (successUrl.Contains("/consents"))
             {
                 IWebElement consent = driver.FindElement(By.Id("submit"));
                 consent.Click();
